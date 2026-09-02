@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { healthService } from "./health.service";
+import { healthService } from "./health.service.js";
 
 class HealthController {
     public checkHealth(req: Request, res: Response, next: NextFunction): void {

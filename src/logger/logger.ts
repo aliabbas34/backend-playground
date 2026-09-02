@@ -1,5 +1,5 @@
 import pino from "pino";
-import { envConfig } from "../config/env";
+import { envConfig } from "../config/env.js";
 
 const isProduction = envConfig.NODE_ENV === "production";
 const logLevel = envConfig.LOG_LEVEL;
