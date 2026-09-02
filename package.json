@@ -5,11 +5,13 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "dev": "concurrently --kill-others \"npm run dev:docker\" \"npm run dev:tsc:watch\" \"npm run dev:server\"",
+    "dev": "concurrently --kill-others \"npm run dev:docker\" \"npm run dev:server\"",
     "dev:docker": "docker compose up",
-    "dev:tsc:watch": "tsc --watch",
     "dev:server": "tsx watch src/server.ts",
     "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
     "start": "node dist/src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "prisma skills sync || exit 0"
