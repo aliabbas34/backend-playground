@@ -8,6 +8,7 @@ import {pinoHttp} from "pino-http";
 import healthRouter from "./modules/health/health.routes.js";
 import { ValidationError } from "./middlewares/validate.js";
 import {requestIdMiddleware} from "./middlewares/requestId.js";
+import authRouter from "./modules/auth/auth.routes.js";
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use(cors());
 app.use(compression());
 
 app.use("/api/v1/health", healthRouter);
+app.use("/api/v1/auth", authRouter)
 
 app.get("/", (req: Request, res: Response) => {
     req.log.info("Received a GET request on /");

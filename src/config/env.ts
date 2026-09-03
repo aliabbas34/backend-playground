@@ -9,6 +9,8 @@ const envSchema = z.object({
     DATABASE_URL: z.string().url("DATABASE_URL must be a valid URL"),
     LOG_LEVEL: z.enum(["trace", "debug", "info", "warn", "error", "fatal"]).default("info"),
     HOSTNAME: z.string().default("localhost"),
+    ACCESS_TOKEN_SECRET: z.string(),
+    REFRESH_TOKEN_SECRET: z.string(),
 });
 
 const parsedEnv = envSchema.parse(process.env);
