@@ -13,7 +13,7 @@ export function errorHandler (
             success: false,
             message: err.message,
             errorCode: err.errorCode,
-            errors: err.errors,
+            details: err.errors,
         });
     }
     if(err instanceof AppError && err.isOperational){

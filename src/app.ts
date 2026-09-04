@@ -1,12 +1,10 @@
-import express, { Request, Response, NextFunction } from "express";
+import express, { Request, Response } from "express";
 import compression from "compression";
 import cors from "cors";
 import helmet from "helmet";
-import { envConfig } from "./config/env.js";
 import { logger } from "./logger/logger.js";
 import {pinoHttp} from "pino-http";
 import healthRouter from "./modules/health/health.routes.js";
-import { ValidationError } from "./middlewares/validate.js";
 import {requestIdMiddleware} from "./middlewares/requestId.js";
 import authRouter from "./modules/auth/auth.routes.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
@@ -16,7 +14,6 @@ const app = express();
 
 app.use(requestIdMiddleware);
 
-// const pinoHttp = pinoHttpImport as unknown as typeof pinoHttpImport.default;
 app.use(pinoHttp({
     logger,
     customSuccessMessage: (req, res) => `${req.method} request on ${req.url} completed with status ${res.statusCode}`,

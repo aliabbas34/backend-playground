@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodObject, ZodError } from "zod";
-import { AppError } from "../errors/app-error.js";
+import { BadRequestError } from "../errors/bad-request-error.js";
 
 interface RequestValidationSchema {
     body?: ZodObject;
@@ -8,11 +8,11 @@ interface RequestValidationSchema {
     params?: ZodObject;
 }
 
-export class ValidationError extends AppError {
+export class ValidationError extends BadRequestError {
     public readonly errors: Record<string, string[]>;
 
     constructor(zodError: ZodError) {
-        super("Validation Error", 400, "VALIDATION_ERROR");
+        super("Validation Error", "VALIDATION_ERROR");
         this.errors = zodError.flatten().fieldErrors as Record<string, string[]>;
     }
 }
