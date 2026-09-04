@@ -9,6 +9,7 @@ declare global {
     }
 }
 
+// Does this require a try catch handler to propogate unexpected errors to error handler?
 
 export const requestIdMiddleware = (req: Request, res: Response, next: NextFunction): void => {
     const headerId = req.headers['x-request-id'];

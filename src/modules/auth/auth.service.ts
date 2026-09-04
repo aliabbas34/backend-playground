@@ -2,6 +2,9 @@ import { prisma } from "../../../lib/prisma.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { envConfig } from "../../config/env.js";
+import { ConflictError } from "../../errors/conflict-error.js";
+import { NotFoundError } from "../../errors/not-found-error.js";
+import { UnauthorizedError } from "../../errors/unauthorized-error.js";
 
 const saltRounds = 10;
 
@@ -34,7 +37,7 @@ class AuthService {
             where: { email: signupData.email },
         });
         if (existingUser) {
-            throw new Error("User with this email already exists.");
+            throw new ConflictError("User with this email already exists.");
         }
         // Hash the password
         const hashedPassword = await bcrypt.hash(signupData.password, saltRounds);
@@ -61,12 +64,12 @@ class AuthService {
             }
         });
         if(!user) {
-            throw new Error("User does not exist!");
+            throw new NotFoundError("User does not exist!");
         }
         // compare hash
         const passwordMatch = await bcrypt.compare(loginData.password, user.passwordHash);
         if(!passwordMatch) {
-            throw new Error("Wrong password! Authentication failed.");
+            throw new UnauthorizedError("Wrong password! Authentication failed.");
         }
         // generate tokens
         const accessToken = jwt.sign({sub:user.id, email: user.email}, envConfig.ACCESS_TOKEN_SECRET, {expiresIn: '15m'} );

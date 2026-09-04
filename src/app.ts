@@ -9,6 +9,8 @@ import healthRouter from "./modules/health/health.routes.js";
 import { ValidationError } from "./middlewares/validate.js";
 import {requestIdMiddleware} from "./middlewares/requestId.js";
 import authRouter from "./modules/auth/auth.routes.js";
+import { errorHandler } from "./middlewares/errorHandler.js";
+import { notFoundRouteHandler } from "./middlewares/notFound.js";
 
 const app = express();
 
@@ -41,36 +43,10 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 // fallback 404 handler.
-app.use((req: Request, res: Response) => {
-    req.log.warn(`404 Not Found: ${req.method} request on ${req.url}`);
-    res.status(404).send("404 Not Found");
-});
+app.use(notFoundRouteHandler);
 
 // error handler
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    if(err instanceof ValidationError) {
-        req.log.warn({errors: err.errors}, "Request validation failed");
-        res.status(err.statusCode).json({
-            error: err.message,
-            details: err.errors,
-        });
-        return;
-    }
-    req.log.error(
-        {
-            err: {
-                message: err.message,
-                stack: err.stack,
-                name: err.name,
-            }
-        },
-        `Unhandled error: ${err.message}`
-    );
-    const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
-    res.status(statusCode).json({
-        error: envConfig.NODE_ENV === "production" ? "Internal Server Error" : err.message,
-    });
-});
+app.use(errorHandler);
 
 export default app;
 
