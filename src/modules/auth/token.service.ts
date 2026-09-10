@@ -25,7 +25,7 @@ class TokenService {
     public verifyRefreshToken(refreshToken: string): {userId: string, sessionId: string} {
         const decoded = jwt.verify(refreshToken, envConfig.REFRESH_TOKEN_SECRET);
         if(typeof decoded === "string") throw new UnauthorizedError("Invalid Refresh Token");
-        if(typeof decoded.sub !== "string") throw new UnauthorizedError("Invalid refresh token");
+        if(typeof decoded.sub !== "string" || typeof decoded.sessionId !== "string") throw new UnauthorizedError("Invalid refresh token");
         return {userId: decoded.sub, sessionId: decoded.sessionId};
     }
 
