@@ -56,16 +56,24 @@ class AuthController {
         }
     }
     public async logoutAll(req: Request, res: Response, next: NextFunction): Promise<void> {
-        req.log.debug("Logout all endpoint called");
-        const refreshToken = req.body.refreshToken;
-        await authService.logoutAll(refreshToken);
-        res.status(200).json({ success: true, message: "All sessions logged out successfully"});
+        try {
+            req.log.debug("Logout all endpoint called");
+            const refreshToken = req.body.refreshToken;
+            await authService.logoutAll(refreshToken);
+            res.status(200).json({ success: true, message: "All sessions logged out successfully"});
+        }catch(error){
+            next(error);
+        }
     }
     public async sessions(req: Request, res: Response, next: NextFunction): Promise<void> {
-        req.log.debug("Sessions endpoint called");
-        const user = req.user as AuthUser;
-        const sessions = await authService.sessions(user.userId);
-        res.status(200).json({success: true, data: { sessions }, message: "All user sessions fetched successfully"});
+        try {
+            req.log.debug("Sessions endpoint called");
+            const user = req.user as AuthUser;
+            const sessions = await authService.sessions(user.userId);
+            res.status(200).json({success: true, data: { sessions }, message: "All user sessions fetched successfully"});
+        }catch(error) {
+            next(error);
+        }
     }
 }
 

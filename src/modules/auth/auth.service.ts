@@ -112,9 +112,7 @@ class AuthService {
         
         const session = await findSessionById(sessionId,userId);
         const user = await findUserById(userId);
-        console.log("check 2", receivedRefreshToken);
         const receivedRefreshTokenHash = tokenService.hashRefreshToken(receivedRefreshToken);
-        console.log("check 2", session.refreshTokenHash);
         if((session.refreshTokenHash !== receivedRefreshTokenHash)) throw new UnauthorizedError("Invalid refresh token");
 
         // rotate refresh token
