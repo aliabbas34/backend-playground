@@ -83,17 +83,6 @@ export async function findUserById(userId: string): Promise<Prisma.UserModel> {
     return user;
 }
 
-export async function cleanUpExpiredSessions(): Promise<void> {
-    await prisma.session.deleteMany({
-        where: {
-            expiresAt: {
-                lt: new Date(),
-            }
-        }
-    });
-    return;
-}
-
 export async function findAllUserSessions(userId: string): Promise<Prisma.SessionModel[]> {
     const response = await prisma.session.findMany({
         where: {

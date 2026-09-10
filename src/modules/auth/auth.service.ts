@@ -4,7 +4,7 @@ import { ConflictError } from "../../errors/conflict-error.js";
 import { NotFoundError } from "../../errors/not-found-error.js";
 import { UnauthorizedError } from "../../errors/unauthorized-error.js";
 import { tokenService } from "./token.service.js";
-import { cleanUpExpiredSessions, createSession, deleteAllSessionForUser, deleteSession, findAllUserSessions, findSessionById, findUserById, updateSession } from "./auth.repository.js";
+import { createSession, deleteAllSessionForUser, deleteSession, findAllUserSessions, findSessionById, findUserById, updateSession } from "./auth.repository.js";
 
 const saltRounds = 10;
 
@@ -108,12 +108,14 @@ class AuthService {
     public async refresh(receivedRefreshToken: string): Promise<RefreshResponse> {
         const {userId, sessionId} = tokenService.verifyRefreshToken(receivedRefreshToken);
 
-        await cleanUpExpiredSessions();
-
         let session: Awaited<ReturnType<typeof findSessionById>>;
         let user: Awaited<ReturnType<typeof findUserById>>;
         try {
             session = await findSessionById(sessionId, userId);
+            if(session.expiresAt < new Date()){
+                await deleteSession(session.id);
+                throw new UnauthorizedError("Invalid refresh token");
+            }
             user = await findUserById(userId);
         } catch (error) {
             if (error instanceof NotFoundError) {
@@ -132,7 +134,7 @@ class AuthService {
 
         // update session hash
         const newRefreshTokenHash = tokenService.hashRefreshToken(newRefreshToken);
-        await updateSession(session.id, {refreshTokenHash: newRefreshTokenHash});
+        await updateSession(session.id, {refreshTokenHash: newRefreshTokenHash, lastUsed: new Date()});
 
         return {
             accessToken: newAccessToken,
