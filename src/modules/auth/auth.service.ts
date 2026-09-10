@@ -1,10 +1,10 @@
 import { prisma } from "../../../lib/prisma.js";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import { envConfig } from "../../config/env.js";
 import { ConflictError } from "../../errors/conflict-error.js";
 import { NotFoundError } from "../../errors/not-found-error.js";
 import { UnauthorizedError } from "../../errors/unauthorized-error.js";
+import { tokenService } from "./token.service.js";
+import { cleanUpExpiredSessions, createSession, deleteAllSessionForUser, deleteSession, findAllUserSessions, findSessionByHash, findSessionById, findUserById, updateSession } from "./auth.repository.js";
 
 const saltRounds = 10;
 
@@ -16,6 +16,8 @@ interface SignupData {
 interface LoginData {
     email: string;
     password: string;
+    userAgent: string | null;
+    ipAddress: string | null;
 }
 interface SignupResponse {
     userId: string;
@@ -30,18 +32,30 @@ interface LoginResponse {
     email: string;
 }
 
+interface RefreshResponse {
+    accessToken: string;
+    refreshToken: string;
+}
+
+interface SessionsResponse {
+    id: string;
+    userAgent: string | null;
+    ipAddress: string | null;
+    lastUsedAt: string;
+    createdAt: string;
+}
+
 class AuthService {
     public async signup(signupData: SignupData): Promise<SignupResponse> {
-        //check existing user in database via email.
         const existingUser = await prisma.user.findUnique({
             where: { email: signupData.email },
         });
         if (existingUser) {
             throw new ConflictError("User with this email already exists.");
         }
-        // Hash the password
+        
         const hashedPassword = await bcrypt.hash(signupData.password, saltRounds);
-        // Create the user in the database
+        
         const user = await prisma.user.create({
             data: {
                 name: signupData.name,
@@ -57,7 +71,6 @@ class AuthService {
         };
     }
     public async login(loginData: LoginData): Promise<LoginResponse> {
-        // find user
         const user = await prisma.user.findUnique({
             where: {
                 email: loginData.email,
@@ -66,16 +79,23 @@ class AuthService {
         if(!user) {
             throw new NotFoundError("User does not exist!");
         }
-        // compare hash
+        
         const passwordMatch = await bcrypt.compare(loginData.password, user.passwordHash);
         if(!passwordMatch) {
             throw new UnauthorizedError("Wrong password! Authentication failed.");
         }
-        // generate tokens
-        const accessToken = jwt.sign({sub:user.id, email: user.email}, envConfig.ACCESS_TOKEN_SECRET, {expiresIn: '15m'} );
-        const refreshToken = jwt.sign({sub: user.id}, envConfig.REFRESH_TOKEN_SECRET, {expiresIn: '7d'});
+        
+        const accessToken = tokenService.generateAccessToken(user);
 
-        // return response
+        const sevenDaysInMiliSeconds = 7*24*60*60*1000;
+        const sessionId = await createSession(user.id, sevenDaysInMiliSeconds, loginData.userAgent, loginData.ipAddress );
+
+        const refreshToken = tokenService.generateRefreshToken(sessionId, user.id);
+
+        const hashRefreshToken = tokenService.hashRefreshToken(refreshToken);
+        
+        await updateSession(sessionId, {refreshTokenHash: hashRefreshToken});
+        
         return {
             accessToken,
             refreshToken,
@@ -83,6 +103,56 @@ class AuthService {
             name: user.name,
             email: user.email,
         }
+    }
+
+    public async refresh(receivedRefreshToken: string): Promise<RefreshResponse> {
+        const {userId, sessionId} = tokenService.verifyRefreshToken(receivedRefreshToken);
+
+        await cleanUpExpiredSessions();
+        
+        const session = await findSessionById(sessionId,userId);
+        const user = await findUserById(userId);
+        console.log("check 2", receivedRefreshToken);
+        const receivedRefreshTokenHash = tokenService.hashRefreshToken(receivedRefreshToken);
+        console.log("check 2", session.refreshTokenHash);
+        if((session.refreshTokenHash !== receivedRefreshTokenHash)) throw new UnauthorizedError("Invalid refresh token");
+
+        // rotate refresh token
+        const newRefreshToken = tokenService.generateRefreshToken(session.id, session.userId);
+
+        const newAccessToken = tokenService.generateAccessToken(user);
+
+        // update session hash
+        const newRefreshTokenHash = tokenService.hashRefreshToken(newRefreshToken);
+        await updateSession(session.id, {refreshTokenHash: newRefreshTokenHash});
+
+        return {
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken,
+        }
+    }
+    public async logout(refreshToken: string): Promise<void> {
+        const {userId, sessionId} = tokenService.verifyRefreshToken(refreshToken);
+        await deleteSession(sessionId);
+        return;
+    }
+    public async logoutAll(refreshToken: string): Promise<void> {
+        const { userId, sessionId } = tokenService.verifyRefreshToken(refreshToken);
+        await deleteAllSessionForUser(userId);
+        return;
+    }
+    public async sessions(userId: string): Promise<SessionsResponse[]> {
+        const sessions = await findAllUserSessions(userId);
+        const responseData = sessions.map((session)=>{
+            return {
+                id: session.id,
+                userAgent: session.userAgent,
+                ipAddress: session.ipAddress,
+                lastUsedAt: String(session.lastUsed),
+                createdAt: String(session.createdAt),
+            };
+        });
+        return responseData;
     }
 }
 

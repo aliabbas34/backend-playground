@@ -14,7 +14,7 @@ declare global {
     }
 }
 const ACCESS_TOKEN_SECRET = envConfig.ACCESS_TOKEN_SECRET;
-type AuthUser = {
+export type AuthUser = {
   userId: string;
   email: string;
 };
