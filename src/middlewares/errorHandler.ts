@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../errors/app-error.js";
 import { ValidationError } from "./validate.js";
+import { TokenExpiredError } from "jsonwebtoken";
+import { UnauthorizedError } from "../errors/unauthorized-error.js";
 
 export function errorHandler (
     err: Error,
@@ -15,6 +17,9 @@ export function errorHandler (
             errorCode: err.errorCode,
             details: err.errors,
         });
+    }
+    if(err instanceof TokenExpiredError) {
+        err = new UnauthorizedError("Token expired");
     }
     if(err instanceof AppError && err.isOperational){
         return res.status(err.statusCode).json({
