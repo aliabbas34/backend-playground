@@ -114,11 +114,12 @@ class AuthService {
         let session: Awaited<ReturnType<typeof findSessionById>>;
         let user: Awaited<ReturnType<typeof findUserById>>;
         try {
-            session = await findSessionById(sessionId, userId);
+            session = await findSessionById(sessionId);
             if(session.expiresAt < new Date()){
                 await deleteSession(session.id);
                 throw new UnauthorizedError("Invalid refresh token");
             }
+            if(session.userId !== userId) throw new UnauthorizedError("Invalid refresh token");
             user = await findUserById(userId);
         } catch (error) {
             if (error instanceof NotFoundError) {

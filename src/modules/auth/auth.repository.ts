@@ -22,11 +22,10 @@ export async function createSession(db: DbClient, userId: string, expireAfterTim
     return session.id;
 }
 
-export async function findSessionById(sessionId: string, userId: string): Promise<SessionModel> {
+export async function findSessionById(sessionId: string): Promise<SessionModel> {
     const session =  await prisma.session.findUnique({
         where: {
             id: sessionId,
-            userId,
         }
     });
     if(!session) throw new NotFoundError("Session not found");
