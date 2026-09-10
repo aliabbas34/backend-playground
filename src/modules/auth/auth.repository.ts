@@ -2,14 +2,16 @@ import { prisma } from "../../../lib/prisma.js";
 import type { Prisma } from "../../../generated/prisma/client.js";
 import { NotFoundError } from "../../errors/not-found-error.js";
 
+type DbClient = typeof prisma | Prisma.TransactionClient;
 
-export async function createSession(userId: string, expireAfterTime: number, userAgent: string | null, ipAddress?: string | null): Promise<string> {
+export async function createSession(db: DbClient, userId: string, expireAfterTime: number, userAgent: string | null, ipAddress: string | null, refreshTokenHash: string): Promise<string> {
     const expiresAt = Date.now() + expireAfterTime;
-    const session = await prisma.session.create({
+    const session = await db.session.create({
         data: {
             userId,
             expiresAt: new Date(expiresAt),
             lastUsed: new Date(),
+            refreshTokenHash,
             userAgent: userAgent ?? null,
             ipAddress: ipAddress ?? null,
         }
@@ -64,8 +66,8 @@ export async function updateLastUsed(sessionId: string) {
     });
 }
 
-export async function updateSession(id: string, updateData: Prisma.SessionUncheckedUpdateInput) {
-    await prisma.session.update({
+export async function updateSession(db: DbClient, id: string, updateData: Prisma.SessionUncheckedUpdateInput) {
+    await db.session.update({
         where: {
             id
         },

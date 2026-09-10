@@ -85,20 +85,23 @@ class AuthService {
             throw new UnauthorizedError("Wrong password! Authentication failed.");
         }
         
-        const accessToken = tokenService.generateAccessToken(user);
+        const tokens = await prisma.$transaction(async (tx)=>{
+            const sevenDaysInMiliSeconds = 7*24*60*60*1000;
+            const sessionId = await createSession(tx, user.id, sevenDaysInMiliSeconds, loginData.userAgent, loginData.ipAddress, "dummyRefreshTokenHash" );
 
-        const sevenDaysInMiliSeconds = 7*24*60*60*1000;
-        const sessionId = await createSession(user.id, sevenDaysInMiliSeconds, loginData.userAgent, loginData.ipAddress );
+            const refreshToken = tokenService.generateRefreshToken(sessionId, user.id);
+            const accessToken = tokenService.generateAccessToken(user);
 
-        const refreshToken = tokenService.generateRefreshToken(sessionId, user.id);
+            const hashRefreshToken = tokenService.hashRefreshToken(refreshToken);
+            
+            await updateSession(tx, sessionId, {refreshTokenHash: hashRefreshToken});
 
-        const hashRefreshToken = tokenService.hashRefreshToken(refreshToken);
-        
-        await updateSession(sessionId, {refreshTokenHash: hashRefreshToken});
+            return { accessToken, refreshToken }
+        });
         
         return {
-            accessToken,
-            refreshToken,
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
             userId: user.id,
             name: user.name,
             email: user.email,
@@ -134,7 +137,7 @@ class AuthService {
 
         // update session hash
         const newRefreshTokenHash = tokenService.hashRefreshToken(newRefreshToken);
-        await updateSession(session.id, {refreshTokenHash: newRefreshTokenHash, lastUsed: new Date()});
+        await updateSession(prisma, session.id, {refreshTokenHash: newRefreshTokenHash, lastUsed: new Date()});
 
         return {
             accessToken: newAccessToken,
