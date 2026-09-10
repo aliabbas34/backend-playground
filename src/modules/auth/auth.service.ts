@@ -4,7 +4,7 @@ import { ConflictError } from "../../errors/conflict-error.js";
 import { NotFoundError } from "../../errors/not-found-error.js";
 import { UnauthorizedError } from "../../errors/unauthorized-error.js";
 import { tokenService } from "./token.service.js";
-import { cleanUpExpiredSessions, createSession, deleteAllSessionForUser, deleteSession, findAllUserSessions, findSessionByHash, findSessionById, findUserById, updateSession } from "./auth.repository.js";
+import { cleanUpExpiredSessions, createSession, deleteAllSessionForUser, deleteSession, findAllUserSessions, findSessionById, findUserById, updateSession } from "./auth.repository.js";
 
 const saltRounds = 10;
 
@@ -77,7 +77,7 @@ class AuthService {
             }
         });
         if(!user) {
-            throw new NotFoundError("User does not exist!");
+            throw new UnauthorizedError("Invalid email or password");
         }
         
         const passwordMatch = await bcrypt.compare(loginData.password, user.passwordHash);
@@ -109,9 +109,19 @@ class AuthService {
         const {userId, sessionId} = tokenService.verifyRefreshToken(receivedRefreshToken);
 
         await cleanUpExpiredSessions();
-        
-        const session = await findSessionById(sessionId,userId);
-        const user = await findUserById(userId);
+
+        let session: Awaited<ReturnType<typeof findSessionById>>;
+        let user: Awaited<ReturnType<typeof findUserById>>;
+        try {
+            session = await findSessionById(sessionId, userId);
+            user = await findUserById(userId);
+        } catch (error) {
+            if (error instanceof NotFoundError) {
+                throw new UnauthorizedError("Invalid refresh token");
+            }
+            throw error;
+        }
+
         const receivedRefreshTokenHash = tokenService.hashRefreshToken(receivedRefreshToken);
         if((session.refreshTokenHash !== receivedRefreshTokenHash)) throw new UnauthorizedError("Invalid refresh token");
 
