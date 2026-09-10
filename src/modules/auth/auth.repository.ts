@@ -13,7 +13,7 @@ export async function createSession(db: DbClient, userId: string, expireAfterTim
         data: {
             userId,
             expiresAt: new Date(expiresAt),
-            lastUsed: new Date(),
+            lastUsedAt: new Date(),
             refreshTokenHash,
             userAgent: userAgent ?? null,
             ipAddress: ipAddress ?? null,
@@ -45,18 +45,6 @@ export async function deleteAllSessionForUser(userId: string): Promise<void> {
     await prisma.session.deleteMany({
         where: {
             userId,
-        }
-    });
-    return;
-}
-
-export async function updateLastUsed(sessionId: string): Promise<void> {
-    await prisma.session.update({
-        where: {
-            id: sessionId,
-        },
-        data: {
-            lastUsed: new Date(),
         }
     });
     return;

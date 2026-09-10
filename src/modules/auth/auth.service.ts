@@ -138,7 +138,7 @@ class AuthService {
 
         // update session hash
         const newRefreshTokenHash = tokenService.hashRefreshToken(newRefreshToken);
-        await updateSession(prisma, session.id, {refreshTokenHash: newRefreshTokenHash, lastUsed: new Date()});
+        await updateSession(prisma, session.id, {refreshTokenHash: newRefreshTokenHash, lastUsedAt: new Date()});
 
         return {
             accessToken: newAccessToken,
@@ -162,7 +162,7 @@ class AuthService {
                 id: session.id,
                 userAgent: session.userAgent,
                 ipAddress: session.ipAddress,
-                lastUsedAt: String(session.lastUsed),
+                lastUsedAt: String(session.lastUsedAt),
                 createdAt: String(session.createdAt),
             };
         });
