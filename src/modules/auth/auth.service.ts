@@ -61,10 +61,10 @@ class AuthService {
         
             const user = await createUser(signupData.name, signupData.email, hashedPassword, tx);
             const expireAfter = 7*24*60*60*1000;
-            const sessionId = await createSession(user.id, expireAfter, signupData.userAgent, signupData.ipAddress, "DummyRefreshToken", tx);
+            const sessionId = crypto.randomUUID();
             const refreshToken = tokenService.generateRefreshToken(sessionId, user.id);
             const refreshTokenHash = tokenService.hashRefreshToken(refreshToken);
-            await updateSession(sessionId, {refreshTokenHash}, tx);
+            await createSession(sessionId, user.id, expireAfter, signupData.userAgent, signupData.ipAddress, refreshTokenHash, tx);
             const accessToken = tokenService.generateAccessToken(user);
             return {
                 userId: user.id,
@@ -96,14 +96,12 @@ class AuthService {
         
         const tokens = await prisma.$transaction(async (tx)=>{
             const sevenDaysInMiliSeconds = 7*24*60*60*1000;
-            const sessionId = await createSession(user.id, sevenDaysInMiliSeconds, loginData.userAgent, loginData.ipAddress, "dummyRefreshTokenHash", tx );
-
+            const sessionId = crypto.randomUUID();
             const refreshToken = tokenService.generateRefreshToken(sessionId, user.id);
             const accessToken = tokenService.generateAccessToken(user);
 
             const hashRefreshToken = tokenService.hashRefreshToken(refreshToken);
-            
-            await updateSession(sessionId, {refreshTokenHash: hashRefreshToken}, tx);
+            await createSession(sessionId, user.id, sevenDaysInMiliSeconds, loginData.userAgent, loginData.ipAddress, hashRefreshToken, tx );
 
             return { accessToken, refreshToken }
         });

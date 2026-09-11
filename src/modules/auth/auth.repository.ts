@@ -10,10 +10,11 @@ function getDbClient(db?: DbClient): DbClient {
     return db ?? prisma;
 }
 
-export async function createSession(userId: string, expireAfterTime: number, userAgent: string | null, ipAddress: string | null, refreshTokenHash: string, db?: DbClient): Promise<string> {
+export async function createSession(sessionId: string, userId: string, expireAfterTime: number, userAgent: string | null, ipAddress: string | null, refreshTokenHash: string, db?: DbClient): Promise<SessionModel> {
     const expiresAt = Date.now() + expireAfterTime;
     const session = await getDbClient(db).session.create({
         data: {
+            id: sessionId,
             userId,
             expiresAt: new Date(expiresAt),
             lastUsedAt: new Date(),
@@ -22,7 +23,7 @@ export async function createSession(userId: string, expireAfterTime: number, use
             ipAddress: ipAddress ?? null,
         }
     });
-    return session.id;
+    return session;
 }
 
 export async function findSessionById(sessionId: string, db?: DbClient): Promise<SessionModel> {
@@ -97,6 +98,9 @@ export async function findAllUserSessions(userId: string, db?: DbClient): Promis
     const response = await getDbClient(db).session.findMany({
         where: {
             userId,
+            expiresAt: {
+                gt: new Date(),
+            }
         }
     });
     return response;
