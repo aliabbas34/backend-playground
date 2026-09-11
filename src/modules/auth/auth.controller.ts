@@ -8,7 +8,9 @@ class AuthController {
         try {
             req.log.debug("Auth signup endpoint called.");
             const { email, name, password } = req.body;
-            const signupResponseData = await authService.signup({ email, name, password });
+            const userAgent = req.headers['user-agent'] || null;
+            const ipAddress = req.ip || null;
+            const signupResponseData = await authService.signup({ email, name, password, userAgent, ipAddress });
             res.status(201).json({success: true, data: signupResponseData, message: "User signed up successfully"});
         } catch (error) {
             next(error);
