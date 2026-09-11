@@ -1,9 +1,8 @@
 import { prisma } from "../../../lib/prisma.js";
 import type { Prisma } from "../../../generated/prisma/client.js";
 import { NotFoundError } from "../../errors/not-found-error.js";
-import type { UserModel } from "../../../generated/prisma/models.js";
+import type { SessionUpdateInput, UserModel } from "../../../generated/prisma/models.js";
 import type { SessionModel } from "../../../generated/prisma/models.js";
-import type { SessionUncheckedUpdateInput } from "../../../generated/prisma/models.js";
 
 type DbClient = typeof prisma | Prisma.TransactionClient;
 
@@ -54,7 +53,7 @@ export async function deleteAllSessionForUser(userId: string, db?: DbClient): Pr
     return;
 }
 
-export async function updateSession(id: string, updateData: SessionUncheckedUpdateInput, db?: DbClient): Promise<void> {
+export async function updateSession(id: string, updateData: SessionUpdateInput, db?: DbClient): Promise<void> {
     await getDbClient(db).session.update({
         where: {
             id

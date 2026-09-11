@@ -91,7 +91,7 @@ class AuthService {
         
         const passwordMatch = await bcrypt.compare(loginData.password, user.passwordHash);
         if(!passwordMatch) {
-            throw new UnauthorizedError("Wrong password! Authentication failed.");
+            throw new UnauthorizedError("Invalid email or password");
         }
         
         const tokens = await prisma.$transaction(async (tx)=>{
@@ -183,26 +183,24 @@ class AuthService {
         return;
     }
     public async logoutAll(refreshToken: string): Promise<void> {
-        await prisma.$transaction(async (tx) => {
-            const {userId, sessionId} = tokenService.verifyRefreshToken(refreshToken);
-            const refreshTokenHash = tokenService.hashRefreshToken(refreshToken);
-            let session: Awaited<ReturnType<typeof findSessionById>>;
-            try {
-                session = await findSessionById(sessionId, tx);
-                if(session.expiresAt < new Date()){
-                    await deleteSession(session.id, tx);
-                    throw new UnauthorizedError("Invalid refresh token");
-                }
-                if(session.userId !== userId) throw new UnauthorizedError("Invalid refresh token");
-            } catch(error){
-                if(error instanceof NotFoundError){
-                    return;
-                }
-                throw error;
+        const {userId, sessionId} = tokenService.verifyRefreshToken(refreshToken);
+        const refreshTokenHash = tokenService.hashRefreshToken(refreshToken);
+        let session: Awaited<ReturnType<typeof findSessionById>>;
+        try {
+            session = await findSessionById(sessionId);
+            if(session.expiresAt < new Date()){
+                await deleteSession(session.id);
+                throw new UnauthorizedError("Invalid refresh token");
             }
-            if(session.refreshTokenHash !== refreshTokenHash) throw new UnauthorizedError("Invalid refresh token");
-            await deleteAllSessionForUser(userId, tx);
-        });
+            if(session.userId !== userId) throw new UnauthorizedError("Invalid refresh token");
+        } catch(error){
+            if(error instanceof NotFoundError){
+                return;
+            }
+            throw error;
+        }
+        if(session.refreshTokenHash !== refreshTokenHash) throw new UnauthorizedError("Invalid refresh token");
+        await deleteAllSessionForUser(userId);
         return;
     }
     public async sessions(userId: string): Promise<SessionsResponse[]> {
