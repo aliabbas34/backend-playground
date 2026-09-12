@@ -5,6 +5,7 @@ import { NotFoundError } from "../../errors/not-found-error.js";
 import { UnauthorizedError } from "../../errors/unauthorized-error.js";
 import { tokenService } from "./token.service.js";
 import { createSession, createUser, deleteAllSessionForUser, deleteSession, findAllUserSessions, findSessionById, findUserByEmailId, findUserById, updateSession } from "./auth.repository.js";
+import { Role } from "../../../generated/prisma/enums.js";
 
 const saltRounds = 10;
 
@@ -12,6 +13,7 @@ interface SignupData {
     name: string;
     email: string;
     password: string;
+    role: Role,
     userAgent: string | null;
     ipAddress: string | null;
 }
@@ -59,7 +61,7 @@ class AuthService {
         const responseData = await prisma.$transaction(async (tx) => {
             const hashedPassword = await bcrypt.hash(signupData.password, saltRounds);
         
-            const user = await createUser(signupData.name, signupData.email, hashedPassword, tx);
+            const user = await createUser(signupData.name, signupData.email, hashedPassword, signupData.role, tx);
             const expireAfter = 7*24*60*60*1000;
             const sessionId = crypto.randomUUID();
             const refreshToken = tokenService.generateRefreshToken(sessionId, user.id);

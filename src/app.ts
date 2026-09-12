@@ -9,6 +9,8 @@ import {requestIdMiddleware} from "./middlewares/requestId.js";
 import authRouter from "./modules/auth/auth.routes.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { notFoundRouteHandler } from "./middlewares/notFound.js";
+import adminRouter from "./modules/admin/admin.routes.js";
+import userRouter from "./modules/user/user.routes.js";
 
 const app = express();
 
@@ -32,7 +34,9 @@ app.use(cors());
 app.use(compression());
 
 app.use("/api/v1/health", healthRouter);
-app.use("/api/v1/auth", authRouter)
+app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/admin", adminRouter);
+app.use("/api/v1/users", userRouter);
 
 app.get("/", (req: Request, res: Response) => {
     req.log.info("Received a GET request on /");

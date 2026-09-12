@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { envConfig } from "../config/env.js";
 import { Request, Response, NextFunction } from "express";
 import { UnauthorizedError } from "../errors/unauthorized-error.js";
+import { Role } from "../../generated/prisma/enums.js";
 
 declare global {
     namespace Express {
@@ -9,6 +10,7 @@ declare global {
             user?: {
                 userId: string;
                 email: string;
+                role: Role;
             };
         }
     }
@@ -17,6 +19,7 @@ const ACCESS_TOKEN_SECRET = envConfig.ACCESS_TOKEN_SECRET;
 export type AuthUser = {
   userId: string;
   email: string;
+  role: Role;
 };
 
 export const authenticate = (req: Request, res: Response, next: NextFunction): Response|void => {
@@ -34,10 +37,13 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): R
         if (typeof decoded === "string") {
             throw new UnauthorizedError("Invalid token payload");
         }
-
+        if(!["ADMIN", "USER"].includes(decoded.role)){
+            throw new UnauthorizedError("Invalid token payload");
+        }
         const user: AuthUser = {
             userId: decoded.sub as string,
             email: decoded.email as string,
+            role: decoded.role as Role,
         };
         req.user = user;
         next();

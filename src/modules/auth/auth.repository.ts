@@ -1,5 +1,5 @@
 import { prisma } from "../../../lib/prisma.js";
-import type { Prisma } from "../../../generated/prisma/client.js";
+import type { Prisma, Role } from "../../../generated/prisma/client.js";
 import { NotFoundError } from "../../errors/not-found-error.js";
 import type { SessionUpdateInput, UserModel } from "../../../generated/prisma/models.js";
 import type { SessionModel } from "../../../generated/prisma/models.js";
@@ -83,12 +83,13 @@ export async function findUserByEmailId(email: string, db?: DbClient): Promise<U
     return user;
 }
 
-export async function createUser(name: string, email: string, passwordHash: string, db?: DbClient): Promise<UserModel> {
+export async function createUser(name: string, email: string, passwordHash: string, role: Role, db?: DbClient): Promise<UserModel> {
     const user = getDbClient(db).user.create({
         data: {
             name,
             email,
             passwordHash,
+            role,
         }
     });
     return user;
