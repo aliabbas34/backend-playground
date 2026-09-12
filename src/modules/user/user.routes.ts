@@ -8,6 +8,6 @@ import { authorize } from "../../middlewares/authorize.js";
 
 const userRouter = Router();
 
-userRouter.patch("/:id/profile", authenticate, validate({params: updateUserParamSchema, body: updateUserBodySchema}), authorize("ADMIN", "USER"), authorizeOwner, userController.updateProfile)
+userRouter.patch("/:id/profile", authenticate, validate({params: updateUserParamSchema, body: updateUserBodySchema}), authorizeOwner, userController.updateProfile)
 
 export default userRouter;

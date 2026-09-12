@@ -37,7 +37,9 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): R
         if (typeof decoded === "string") {
             throw new UnauthorizedError("Invalid token payload");
         }
-
+        if(!["ADMIN", "USER"].includes(decoded.role)){
+            throw new UnauthorizedError("Invalid token payload");
+        }
         const user: AuthUser = {
             userId: decoded.sub as string,
             email: decoded.email as string,

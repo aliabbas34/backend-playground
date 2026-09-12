@@ -1,5 +1,7 @@
+import { Prisma } from "../../../generated/prisma/client.js";
 import { Role } from "../../../generated/prisma/enums.js";
 import { prisma } from "../../../lib/prisma.js";
+import { NotFoundError } from "../../errors/not-found-error.js";
 
 interface UserData {
     id: string,
@@ -12,7 +14,7 @@ interface UserData {
 
 class AdminService{
     public async listUsers(): Promise<UserData[]>{
-        const users = await prisma.user.findMany({// move this to admin.repository.ts
+        const users = await prisma.user.findMany({
             select: {
                 id: true,
                 name: true,
@@ -25,14 +27,25 @@ class AdminService{
         return users;
     }
     public async updateUserRole(userId: string, newRole: Role): Promise<void> {
-        await prisma.user.update({// move this to admin.repository.ts
-            where: {
-                id: userId,
-            },
-            data: {
-                role: newRole,
+        try {
+            await prisma.user.update({
+                where: {
+                    id: userId,
+                },
+                data: {
+                    role: newRole,
+                }
+            });
+            return;
+        } catch(error) {
+            if(error instanceof Prisma.PrismaClientKnownRequestError){
+                if(error.code==='P2025'){
+                    throw new NotFoundError("user not found")
+                }
             }
-        });
+            throw error;
+        }
+        
     }
 }
 
