@@ -7,10 +7,10 @@ class AuthController {
     public async signup(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             req.log.debug("Auth signup endpoint called.");
-            const { email, name, password } = req.body;
+            const { email, name, password, role } = req.body;
             const userAgent = req.headers['user-agent'] || null;
             const ipAddress = req.ip || null;
-            const signupResponseData = await authService.signup({ email, name, password, userAgent, ipAddress });
+            const signupResponseData = await authService.signup({ email, name, password, role, userAgent, ipAddress });
             res.status(201).json({success: true, data: signupResponseData, message: "User signed up successfully"});
         } catch (error) {
             next(error);

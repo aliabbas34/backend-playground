@@ -1,4 +1,4 @@
-import { signupSchema, loginSchema, refreshSchema } from "./auth.schema.js";
+import { signupSchema, loginSchema, refreshTokenInBodySchema } from "./auth.schema.js";
 import { Router } from "express";
 import { authController } from "./auth.controller.js";
 import { validate } from "../../middlewares/validate.js";
@@ -9,9 +9,9 @@ const authRouter = Router();
 authRouter.post("/signup", validate({ body: signupSchema}), authController.signup);
 authRouter.post("/login", validate({body: loginSchema}), authController.login);
 authRouter.get("/me", authenticate, authController.me )
-authRouter.post("/refresh", authenticate, validate({body: refreshSchema}), authController.refresh);
-authRouter.post("/logout", authenticate, authController.logout); // req body schema validation required.
-authRouter.post("/logout-all", authenticate, authController.logoutAll); // req body schema validation required.
+authRouter.post("/refresh", authenticate, validate({body: refreshTokenInBodySchema}), authController.refresh);
+authRouter.post("/logout", authenticate, validate({body: refreshTokenInBodySchema}), authController.logout);
+authRouter.post("/logout-all", authenticate, validate({body: refreshTokenInBodySchema}), authController.logoutAll);
 authRouter.get("/sessions", authenticate, authController.sessions);
 
 export default authRouter;
