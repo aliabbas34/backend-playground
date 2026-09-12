@@ -2,18 +2,12 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import { envConfig } from "../../config/env.js";
 import crypto from "crypto";
 import { UnauthorizedError } from "../../errors/unauthorized-error.js";
+import { UserModel } from "../../../generated/prisma/models.js";
 
 
 class TokenService {
-    public generateAccessToken(user: {
-        id: string;
-        email: string;
-        name: string;
-        passwordHash: string;
-        createdAt: Date;
-        updatedAt: Date;
-    }):string {
-        const accessToken = jwt.sign({sub:user.id, email: user.email}, envConfig.ACCESS_TOKEN_SECRET, {expiresIn: '15m'} );
+    public generateAccessToken(user: UserModel):string {
+        const accessToken = jwt.sign({sub:user.id, email: user.email, role: user.role}, envConfig.ACCESS_TOKEN_SECRET, {expiresIn: '15m'} );
         return accessToken;
     }
 

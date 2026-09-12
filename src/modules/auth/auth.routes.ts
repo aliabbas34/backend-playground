@@ -9,8 +9,9 @@ const authRouter = Router();
 authRouter.post("/signup", validate({ body: signupSchema}), authController.signup);
 authRouter.post("/login", validate({body: loginSchema}), authController.login);
 authRouter.get("/me", authenticate, authController.me )
-authRouter.post("/refresh", validate({body: refreshSchema}), authController.refresh);
-authRouter.post("/logout", authenticate, authController.logout);
-authRouter.post("/logout-all", authenticate, authController.logoutAll);
+authRouter.post("/refresh", authenticate, validate({body: refreshSchema}), authController.refresh);
+authRouter.post("/logout", authenticate, authController.logout); // req body schema validation required.
+authRouter.post("/logout-all", authenticate, authController.logoutAll); // req body schema validation required.
 authRouter.get("/sessions", authenticate, authController.sessions);
+
 export default authRouter;
