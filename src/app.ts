@@ -20,15 +20,6 @@ app.use(requestIdMiddleware);
 app.use(pinoHttp({
     logger,
     genReqId: (req) => req.id,
-    redact: [
-        "req.headers.authorization", 
-        "req.headers.cookie", 
-        "req.headers.set-cookie", 
-        "req.body.password",
-        "req.body.refreshToken",
-        "res.body.accessToken",
-        "res.body.refreshToken",
-    ],
     autoLogging: false,
 }));
 app.use(logRequests);

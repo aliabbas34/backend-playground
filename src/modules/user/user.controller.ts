@@ -6,7 +6,6 @@ import { ListUsersQueryDto, UpdateUserBodyDto, UpdateUserParamsDto } from "./use
 class UserController {
     public async updateProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            req.log.info("update profile endpoint called");
             const {id: userId} = req.validated?.params as UpdateUserParamsDto;
             const updateData = req.validated?.body as UpdateUserBodyDto;
             await userService.updateProfile(userId, updateData);
@@ -18,10 +17,9 @@ class UserController {
     }
     public async listUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            req.log.info("list users endpoint called");
             const query = req.validated?.query as ListUsersQueryDto;
             const page = query.page;
-            const limit = query.page;
+            const limit = query.limit;
             const search = query.search;
             const role = query.role;
             const respData = await userService.listUsers(page, limit, search, role);

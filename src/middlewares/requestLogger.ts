@@ -1,13 +1,16 @@
 import { NextFunction, Request, Response } from "express";
-import { logger } from "../logger/logger.js";
-import { startTime } from "pino-http";
 
 
 export function logRequests(req: Request, res: Response, next: NextFunction): void {
+    const startedAt = Date.now();
     res.once("finish", ()=> {
-        const duration = Date.now() - res[startTime];
-
-        logger.info({
+        const duration = Date.now() - startedAt;
+        const logMethod = res.statusCode >= 500
+            ? "error"
+            : res.statusCode >= 400
+                ? "warn"
+                : "info";
+        req.log[logMethod]({
             method: req.method,
             path: req.path,
             requestId: req.id,
