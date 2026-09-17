@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { adminService } from "./admin.service.js";
-import { Role } from "../../../generated/prisma/enums.js";
+import { UserRoleUpdateBodyDto, UserRoleUpdateParamDto } from "./admin.schema.js";
 
 
 class AdminController{
@@ -17,8 +17,8 @@ class AdminController{
     public async updateUserRole(req: Request, res: Response, next: NextFunction): Promise<void> {
         try{
             req.log.debug("admin user-role endpoint called");
-            const newRole = req.body.role as Role;
-            const userId = req.params.id as string;
+            const {role:newRole} = req.validated?.body as UserRoleUpdateBodyDto;
+            const {id:userId} = req.validated?.params as UserRoleUpdateParamDto;
             await adminService.updateUserRole(userId, newRole);
             res.status(200).json({ success: true, message: "User role updated successfully"});
         } catch(error) {
