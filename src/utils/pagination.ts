@@ -10,11 +10,9 @@ interface PaginationOffset {
 export function getPaginationOffset(
   page: number,
   limit: number,
-  defaultLimit = 10
 ): PaginationOffset {
-    const pageValue = Math.max(1, page || 1);
-    const take = Math.max(1, limit || defaultLimit);
-    const skip = (pageValue - 1) * take;
+    const take = limit;
+    const skip = (page - 1) * take;
 
     return { skip, take };
 }

@@ -16,7 +16,11 @@ class UserController {
     }
     public async listUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const { page, limit, search, role } = req.validated?.query as ListUsersQueryDto;
+            const query = req.validated?.query as ListUsersQueryDto;
+            const page = query.page;
+            const limit = query.page;
+            const search = query.search;
+            const role = query.role;
             const respData = await userService.listUsers(page, limit, search, role);
             res.status(200).json({respData});
         }catch (error) {
