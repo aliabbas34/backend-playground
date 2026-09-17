@@ -6,6 +6,7 @@ import { UnauthorizedError } from "../../errors/unauthorized-error.js";
 import { tokenService } from "./token.service.js";
 import { createSession, createUser, deleteAllSessionForUser, deleteSession, findAllUserSessions, findSessionById, findUserByEmailId, findUserById, updateSession } from "./auth.repository.js";
 import { Role } from "../../../generated/prisma/enums.js";
+import { logger } from "../../logger/logger.js";
 
 const saltRounds = 10;
 
@@ -75,7 +76,7 @@ class AuthService {
                 accessToken,
                 refreshToken
             }
-        })
+        });
        
         return {
             userId: responseData.userId,
