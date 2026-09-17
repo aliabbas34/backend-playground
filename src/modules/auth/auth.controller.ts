@@ -2,12 +2,13 @@
 import { Request, Response, NextFunction } from "express";
 import {authService} from "./auth.service.js";
 import { AuthUser } from "../../middlewares/authenticate.js";
+import { LoginBodyDto, RefreshTokenInBodyDto, SignupBodyDto } from "./auth.schema.js";
 
 class AuthController {
     public async signup(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             req.log.debug("Auth signup endpoint called.");
-            const { email, name, password, role } = req.body;
+            const { email, name, password, role } = req.validated?.body as SignupBodyDto;
             const userAgent = req.headers['user-agent'] || null;
             const ipAddress = req.ip || null;
             const signupResponseData = await authService.signup({ email, name, password, role, userAgent, ipAddress });
@@ -20,7 +21,7 @@ class AuthController {
         try {
             req.log.debug("Auth login endpoint called.");
             
-            const { email, password } = req.body;
+            const { email, password } = req.validated?.body as LoginBodyDto;
             const userAgent = req.headers['user-agent'] || null;
             const ipAddress = req.ip || null;
             const loginResponseData = await authService.login({ email, password, userAgent, ipAddress });
@@ -39,7 +40,7 @@ class AuthController {
     public async refresh(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             req.log.debug("Refresh endpoint called");
-            const refreshToken = req.body.refreshToken;
+            const {refreshToken} = req.validated?.body as RefreshTokenInBodyDto;
             const tokens = await authService.refresh(refreshToken);
             res.status(200).json({success: true, data: { tokens }, message: "Token refresh successful" });
         }catch(error) {
@@ -48,9 +49,8 @@ class AuthController {
     }
     public async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            // logic
             req.log.debug("Logout endpoint called");
-            const refreshToken = req.body.refreshToken;
+            const {refreshToken} = req.validated?.body as RefreshTokenInBodyDto;
             await authService.logout(refreshToken);
             res.status(200).json({ success: true, message: "user logged out successfully"});
         } catch(error) {
@@ -60,7 +60,7 @@ class AuthController {
     public async logoutAll(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             req.log.debug("Logout all endpoint called");
-            const refreshToken = req.body.refreshToken;
+            const {refreshToken} = req.validated?.body as RefreshTokenInBodyDto;
             await authService.logoutAll(refreshToken);
             res.status(200).json({ success: true, message: "All sessions logged out successfully"});
         }catch(error){
