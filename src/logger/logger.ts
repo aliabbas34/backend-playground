@@ -17,5 +17,17 @@ export const logger = pino({
     level: logLevel,
     timestamp: pino.stdTimeFunctions.isoTime,
     base: isProduction ? { pid: process.pid, hostname: envConfig.HOSTNAME } : null,
+    redact: [
+        "password",
+        "refreshToken",
+        "accessToken",
+        "req.headers.authorization",
+        "req.headers.cookie",
+        "req.headers.set-cookie",
+        "req.body.password",
+        "req.body.refreshToken",
+        "res.body.accessToken",
+        "res.body.refreshToken",
+    ]
 },
 transport);

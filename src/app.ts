@@ -11,6 +11,7 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 import { notFoundRouteHandler } from "./middlewares/notFound.js";
 import adminRouter from "./modules/admin/admin.routes.js";
 import userRouter from "./modules/user/user.routes.js";
+import { logRequests } from "./middlewares/requestLogger.js";
 
 const app = express();
 
@@ -18,15 +19,19 @@ app.use(requestIdMiddleware);
 
 app.use(pinoHttp({
     logger,
-    customSuccessMessage: (req, res) => `${req.method} request on ${req.url} completed with status ${res.statusCode}`,
-    customLogLevel: (req, res, err) => {
-        if(res.statusCode >= 500 || err) return 'error';
-        if(res.statusCode >= 400) return 'warn';
-        return 'info';
-    },
     genReqId: (req) => req.id,
-    redact: ['req.headers.authorization', 'req.headers.cookie', 'req.headers.set-cookie'],
+    redact: [
+        "req.headers.authorization", 
+        "req.headers.cookie", 
+        "req.headers.set-cookie", 
+        "req.body.password",
+        "req.body.refreshToken",
+        "res.body.accessToken",
+        "res.body.refreshToken",
+    ],
+    autoLogging: false,
 }));
+app.use(logRequests);
 
 app.use(express.json());
 app.use(helmet());
