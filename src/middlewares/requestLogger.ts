@@ -13,7 +13,7 @@ export function logRequests(req: Request, res: Response, next: NextFunction): vo
         req.log[logMethod]({
             method: req.method,
             path: req.path,
-            requestId: req.id,
+            requestId: req.requestId,
             userId: req.user?.userId,
             duration,
             statusCode: res.statusCode,

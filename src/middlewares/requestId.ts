@@ -4,7 +4,7 @@ import { randomUUID } from "crypto";
 declare global {
     namespace Express {
         interface Request {
-            id: string;
+            requestId: string;
         }
     }
 }
@@ -14,7 +14,7 @@ declare global {
 export const requestIdMiddleware = (req: Request, res: Response, next: NextFunction): void => {
     const headerId = req.headers['x-request-id'];
     const requestId = headerId && (Array.isArray(headerId) ? headerId[0] : headerId) || randomUUID();
-    req.id = requestId;
+    req.requestId = requestId;
     res.setHeader('X-Request-Id', requestId);
     next();
 }
