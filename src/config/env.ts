@@ -11,6 +11,7 @@ const envSchema = z.object({
     HOSTNAME: z.string().default("localhost"),
     ACCESS_TOKEN_SECRET: z.string(),
     REFRESH_TOKEN_SECRET: z.string(),
+    REDIS_URL: z.string().url().default("redis://localhost:6379"),
 });
 
 const parsedEnv = envSchema.parse(process.env);

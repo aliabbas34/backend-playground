@@ -1,12 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 import { userService } from "./user.service.js";
-import { ListUsersQueryDto, UpdateUserBodyDto, UpdateUserParamsDto } from "./user.schema.js";
+import { ListUsersQueryDto, UpdateUserBodyDto, UpdateOrGetUserParamsDto } from "./user.schema.js";
 
 
 class UserController {
     public async updateProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const {id: userId} = req.validated?.params as UpdateUserParamsDto;
+            const {id: userId} = req.validated?.params as UpdateOrGetUserParamsDto;
             const updateData = req.validated?.body as UpdateUserBodyDto;
             await userService.updateProfile(userId, updateData);
             req.log.info("user profile updated");
@@ -26,6 +26,15 @@ class UserController {
             req.log.info("all users fetched successfully");
             res.status(200).json({respData});
         }catch (error) {
+            next(error);
+        }
+    }
+    public async userProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const {id: userId} = req.validated?.params as UpdateOrGetUserParamsDto;
+            const userData = await userService.userProfile(userId);
+            res.status(200).json({success: true, message: "User profile fetched successfully", data: userData});
+        } catch(error){
             next(error);
         }
     }

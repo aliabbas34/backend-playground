@@ -1,10 +1,10 @@
 import { z } from "zod";
 
-export const updateUserParamSchema = z.object({
+export const updateOrGetUserParamSchema = z.object({
     id: z.string()
 });
 
-export type UpdateUserParamsDto = z.infer<typeof updateUserParamSchema>;
+export type UpdateOrGetUserParamsDto = z.infer<typeof updateOrGetUserParamSchema>;
 
 export const updateUserBodySchema = z.object({
     name: z.string().min(3, "Name length too short, use atleast 3 characters"),
