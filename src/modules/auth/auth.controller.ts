@@ -11,8 +11,9 @@ class AuthController {
             const { email, name, password, role } = req.validated?.body as SignupBodyDto;
             const userAgent = req.headers['user-agent'] || null;
             const ipAddress = req.ip || null;
-            const signupResponseData = await authService.signup({ email, name, password, role, userAgent, ipAddress });
-            req.log.info("Signup successful")
+            const requestId = req.requestId;
+            const signupResponseData = await authService.signup({ email, name, password, role, userAgent, ipAddress, requestId });
+            req.log.info("Signup successful");
             res.status(201).json({success: true, data: signupResponseData, message: "User signed up successfully"});
         } catch (error) {
             next(error);

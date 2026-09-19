@@ -7,6 +7,7 @@ import { tokenService } from "./token.service.js";
 import { createSession, createUser, deleteAllSessionForUser, deleteSession, findAllUserSessions, findSessionById, findUserByEmailId, findUserById, updateSession } from "./auth.repository.js";
 import { Role } from "../../../generated/prisma/enums.js";
 import { logger } from "../../logger/logger.js";
+import { userEventsQueue } from "../../lib/queue.js";
 
 const saltRounds = 10;
 
@@ -14,9 +15,10 @@ interface SignupData {
     name: string;
     email: string;
     password: string;
-    role: Role,
+    role: Role;
     userAgent: string | null;
     ipAddress: string | null;
+    requestId: string;
 }
 interface LoginData {
     email: string;
@@ -31,13 +33,6 @@ interface SignupOrLoginResponse {
     accessToken: string;
     refreshToken: string;
 }
-// interface LoginResponse {
-//     accessToken: string;
-//     refreshToken: string;
-//     userId: string;
-//     name: string;
-//     email: string;
-// }
 
 interface RefreshResponse {
     accessToken: string;
@@ -78,6 +73,17 @@ class AuthService {
             }
         });
        
+        await userEventsQueue.add("user.signed_up", {
+                userId: responseData.userId,
+                email: responseData.email,
+                requestId: signupData.requestId,
+                occurredAt: new Date().toISOString(),
+            },
+            {
+                jobId: `user.signed_up:${responseData.userId}`
+            },
+        );
+
         return {
             userId: responseData.userId,
             email: responseData.email,

@@ -19,7 +19,7 @@ app.use(requestIdMiddleware);
 
 app.use(pinoHttp({
     logger,
-    genReqId: (req) => req.id,
+    genReqId: (req): string => req.requestId,
     autoLogging: false,
 }));
 app.use(logRequests);
