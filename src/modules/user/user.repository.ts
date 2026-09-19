@@ -63,6 +63,22 @@ class UserRepository {
         ]);
         return { data, total };
     }
+    public async findUser(userId: string, db: DbClient = this.db): Promise<PublicUser|null> {
+        const userProfile = await db.user.findUnique({
+            where: {
+                id: userId,
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                createdAt: true,
+                updatedAt: true,
+            }
+        });
+        return userProfile;
+    }
 }
 
 export const userRepository = new UserRepository();

@@ -2,6 +2,7 @@ import { Prisma } from "../../../generated/prisma/client.js";
 import { Role } from "../../../generated/prisma/enums.js";
 import { prisma } from "../../../lib/prisma.js";
 import { NotFoundError } from "../../errors/not-found-error.js";
+import { invalidateUserCache } from "../../lib/redis.js";
 
 interface UserData {
     id: string,
@@ -36,6 +37,7 @@ class AdminService{
                     role: newRole,
                 }
             });
+            await invalidateUserCache(userId);
             return;
         } catch(error) {
             if(error instanceof Prisma.PrismaClientKnownRequestError){
