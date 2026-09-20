@@ -73,16 +73,21 @@ class AuthService {
             }
         });
        
-        await userEventsQueue.add("user.signed_up", {
-                userId: responseData.userId,
-                email: responseData.email,
-                requestId: signupData.requestId,
-                occurredAt: new Date().toISOString(),
-            },
-            {
-                jobId: `user.signed_up:${responseData.userId}`
-            },
-        );
+        try {
+            await userEventsQueue.add("user.signed_up", 
+                {
+                    userId: responseData.userId,
+                    email: responseData.email,
+                    requestId: signupData.requestId,
+                    occurredAt: new Date().toISOString(),
+                },
+                {
+                    jobId: `user.signed_up-${responseData.userId}`
+                },
+            );
+        }catch(error){
+            logger.error({ error, userId: responseData.userId }, "Failed to enqueue signup event");
+        }
 
         return {
             userId: responseData.userId,

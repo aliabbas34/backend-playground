@@ -1,14 +1,11 @@
-import { Worker, createNodeRedisClient, type Job } from "bullmq";
-import { connectRedis, redisClient } from "../lib/redis.js";
+import { Worker, type Job } from "bullmq";
 import { logger } from "../logger/logger.js";
+import { connection } from "../lib/queue.js";
 
 type UserEventData = {
     requestId?: string;
     [key: string]: unknown;
 };
-
-const adaptedClient = createNodeRedisClient(redisClient);
-await connectRedis();
 
 const worker = new Worker<UserEventData>(
     "user-events",
@@ -38,7 +35,7 @@ const worker = new Worker<UserEventData>(
         }
     },
     {
-        connection: adaptedClient,
+        connection,
     },
 );
 
@@ -58,10 +55,14 @@ worker.on("failed", (job, error) => {
     );
 });
 
+worker.on("error", (error) => {
+    logger.error({error}, "User events worker error");
+});
+
 
 const shutdown = async () => {
     await worker.close();
-    await redisClient.quit();
+    connection.disconnect();
 };
 
 process.once("SIGINT", shutdown);

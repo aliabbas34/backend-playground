@@ -1,10 +1,13 @@
-import { Queue, createNodeRedisClient } from "bullmq";
-import { redisClient } from "./redis.js";
+import { Queue } from "bullmq";
+import { envConfig } from "../config/env.js";
+import { Redis } from 'ioredis';
 
-const adaptedClient = createNodeRedisClient(redisClient);
+export const connection = new Redis(envConfig.REDIS_URL, {
+    maxRetriesPerRequest: null,
+});
 
 export const userEventsQueue = new Queue("user-events", {
-    connection: adaptedClient,
+    connection,
     defaultJobOptions: {
         attempts: 3,
         backoff: {

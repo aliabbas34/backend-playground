@@ -12,21 +12,25 @@ interface UserProfileUpdateData {
     email: string
 }
 
-class UserService{
+class UserService {
     public async updateProfile(userId: string, updateData: UserProfileUpdateData, requestId: string): Promise<void> {
         await userRepository.updateUserProfile(userId, updateData);
         await invalidateUserCache(userId);
-        await userEventsQueue.add("profile.updated", 
-            {
-                userId,
-                email: updateData.email,
-                requestId: requestId,
-                occurredAt: new Date().toISOString(),
-            },
-            {
-                jobId: `profile.updated:${userId}`
-            },
-        );
+        try {
+            await userEventsQueue.add("profile.updated", 
+                {
+                    userId,
+                    email: updateData.email,
+                    requestId: requestId,
+                    occurredAt: new Date().toISOString(),
+                },
+                {
+                    jobId: `profile.updated-${userId}`
+                },
+            );
+        } catch(error) {
+            logger.error({error, userId}, "Failed to enqueue profile update event");
+        }
         return;
     }
     public async listUsers(page: number, limit: number, search?: string, role?: Role): Promise<PaginatedResponse<PublicUser>> {
