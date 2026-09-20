@@ -18,7 +18,7 @@ export function errorHandler (
     const statusCode = err instanceof AppError ? err.statusCode : 500;
     const errorCode = err instanceof AppError ? err.errorCode : "INTERNAL_SERVER_ERROR";
     const logData = {
-        requestId: req.id,
+        requestId: req.requestId,
         route: req.route?.path ?? req.path,
         method: req.method,
         stack: envConfig.NODE_ENV === "development" ? err.stack : undefined,

@@ -8,7 +8,7 @@ class UserController {
         try {
             const {id: userId} = req.validated?.params as UpdateOrGetUserParamsDto;
             const updateData = req.validated?.body as UpdateUserBodyDto;
-            await userService.updateProfile(userId, updateData);
+            await userService.updateProfile(userId, updateData, req.requestId);
             req.log.info("user profile updated");
             res.status(200).json({success: true, message: "User profile updated successfully"});
         } catch(error) {
